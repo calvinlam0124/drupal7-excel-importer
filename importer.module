@@ -102,14 +102,7 @@ function importer_create_product_node($row)
 //line3";
 //  $product_catagory = "Ceiling Mount";
 
-  $values = array(
-    'type' => 'product',
-    'uid' => $user->uid,
-    'status' => 1,
-    'comment' => 1,
-    'promote' => 0,
-  );
-
+  // data preprocessing
   $product_description = "<ul><li>" . implode("</li><li>", explode("\n", $product_description)) . "</li></ul>";
   $features = "<ul><li>" . implode("</li><li>", explode("\n", $features)) . "</li></ul>";
   $terms = taxonomy_get_term_by_name($product_catagory);
@@ -122,6 +115,14 @@ function importer_create_product_node($row)
     }
   }
 
+  // create node
+  $values = array(
+    'type' => 'product',
+    'uid' => $user->uid,
+    'status' => 1,
+    'comment' => 1,
+    'promote' => 0,
+  );
   $entity = entity_create('node', $values);
   $ewrapper = entity_metadata_wrapper('node', $entity);
 
@@ -139,6 +140,7 @@ function importer_create_product_node($row)
   );
   $ewrapper->field_product_thumbnail->set($field);
 
+  // set node values
   $ewrapper->title->set($title);
   $ewrapper->field_product_name->set($product_name);
 //  $ewrapper->field_product_thumbnail->set('YOUR PRODUCT NAME');
