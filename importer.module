@@ -24,7 +24,6 @@ function importer_form($form, &$form_state)
     '#type' => 'file',
     '#name' => 'file',
     '#title' => t('File'),
-    '#upload_location' => 'public://csv/',
   );
 
   $form['submit_button'] = array(
@@ -69,7 +68,7 @@ function importer_form_submit($form, &$form_state)
 function importer_handle_product_tab($sheet)
 {
   foreach ($sheet->getRowIterator() as $key => $row) {
-    if($key == 1){
+    if ($key == 1) {
       continue;
     }
     importer_create_product_node($row);
@@ -113,6 +112,16 @@ function importer_create_product_node($row)
 
   $product_description = "<ul><li>" . implode("</li><li>", explode("\n", $product_description)) . "</li></ul>";
   $features = "<ul><li>" . implode("</li><li>", explode("\n", $features)) . "</li></ul>";
+  $terms = taxonomy_get_term_by_name($product_catagory);
+  if (is_array($terms)) {
+    foreach ($terms as $term) {
+      if ($term->vocabulary_machine_name == 'product_category') {
+        $folderid = $term->tid;
+        break;
+      }
+    }
+  }
+
   $entity = entity_create('node', $values);
   $ewrapper = entity_metadata_wrapper('node', $entity);
 
@@ -133,10 +142,10 @@ function importer_create_product_node($row)
   $ewrapper->title->set($title);
   $ewrapper->field_product_name->set($product_name);
 //  $ewrapper->field_product_thumbnail->set('YOUR PRODUCT NAME');
-  $ewrapper->field_product_description->set( ['value' => $product_description] );
+  $ewrapper->field_product_description->set(['value' => $product_description]);
   $ewrapper->field_product_sku->set($product_sku);
   $ewrapper->field_product_featues->set(['value' => $features]);
-//  $ewrapper->field_product_catagory->set($product_catagory);
+  $ewrapper->field_product_catagory->set($folderid);
 
   $ewrapper->save();
 
