@@ -1,0 +1,3 @@
+core = "7.x"
+description = "An module used to import psehk product."
+name = "PSEHK product importer"

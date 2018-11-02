@@ -1,0 +1,143 @@
+<?php
+
+require_once(getcwd() . "/sites/all/libraries/Spout/Autoloader/autoload.php");
+
+use Box\Spout\Reader\ReaderFactory;
+use Box\Spout\Common\Type;
+
+function importer_menu()
+{
+  $items = array();
+  $items['importer/form-example'] = array(
+    'title' => 'PSEHK product importer',
+    'description' => 'A form to mess around with.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('importer_form'),
+    'access callback' => TRUE
+  );
+  return $items;
+}
+
+function importer_form($form, &$form_state)
+{
+  $form['file'] = array(
+    '#type' => 'file',
+    '#name' => 'file',
+    '#title' => t('File'),
+    '#upload_location' => 'public://csv/',
+  );
+
+  $form['submit_button'] = array(
+    '#type' => 'submit',
+    '#value' => t('Import'),
+  );
+
+  return $form;
+}
+
+function importer_form_validate($form, &$form_state)
+{
+//  if (!($form_state['values']['price'] > 0)) {
+//    form_set_error('price', t('Price must be a positive number.'));
+//  }
+}
+
+function importer_form_submit($form, &$form_state)
+{
+  $filePath = $_FILES["file"]["tmp_name"];
+  $reader = ReaderFactory::create(Type::XLSX);
+  $reader->open($filePath);
+  foreach ($reader->getSheetIterator() as $sheet) {
+    switch ($sheet->getName()) {
+      case "product":
+        importer_handle_product_tab($sheet);
+        break;
+      case "product_variation":
+      case "product_specification":
+      case "pq_curve":
+      case "support_document":
+      case "accessory":
+      case "related_product":
+      default:
+        importer_handle_product_tab($sheet);
+        break;
+    }
+  }
+  $reader->close();
+}
+
+function importer_handle_product_tab($sheet)
+{
+  foreach ($sheet->getRowIterator() as $key => $row) {
+    if($key == 1){
+      continue;
+    }
+    importer_create_product_node($row);
+  }
+}
+
+function importer_create_product_node($row)
+{
+  global $user;
+
+  $title = $row[0];
+  $product_name = $row[1];
+  $product_thumbnail = $row[2];
+  $product_description = $row[3];
+  $product_sku = $row[4];
+  $features = $row[5];
+  $product_catagory = $row[6];
+  $photos = $row[7];
+
+//  $title = "newtitle";
+//  $product_name = "newprodcutname";
+////  $product_thumbnail = "";
+//  $product_description = "newdescription
+//line1
+//line2
+//line3";
+//  $product_sku = "newproductsku";
+//  $features = "newfeatures
+//line1
+//line2
+//line3";
+//  $product_catagory = "Ceiling Mount";
+
+  $values = array(
+    'type' => 'product',
+    'uid' => $user->uid,
+    'status' => 1,
+    'comment' => 1,
+    'promote' => 0,
+  );
+
+  $product_description = "<ul><li>" . implode("</li><li>", explode("\n", $product_description)) . "</li></ul>";
+  $features = "<ul><li>" . implode("</li><li>", explode("\n", $features)) . "</li></ul>";
+  $entity = entity_create('node', $values);
+  $ewrapper = entity_metadata_wrapper('node', $entity);
+
+  $field = array('alt' => '',
+    'title' => '',
+    'fid' => 97,
+    'display' => 1,
+    'width' => 100,
+    'height' => 100,
+    'image_field_caption' => array
+    (
+      'value' => '',
+      'format' => 'full_html',
+    ),
+  );
+  $ewrapper->field_product_thumbnail->set($field);
+
+  $ewrapper->title->set($title);
+  $ewrapper->field_product_name->set($product_name);
+//  $ewrapper->field_product_thumbnail->set('YOUR PRODUCT NAME');
+  $ewrapper->field_product_description->set( ['value' => $product_description] );
+  $ewrapper->field_product_sku->set($product_sku);
+  $ewrapper->field_product_featues->set(['value' => $features]);
+//  $ewrapper->field_product_catagory->set($product_catagory);
+
+  $ewrapper->save();
+
+}
