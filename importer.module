@@ -8,9 +8,9 @@ use Box\Spout\Common\Type;
 function importer_menu()
 {
   $items = array();
-  $items['importer/form-example'] = array(
+  $items['importer/psehk_importer'] = array(
     'title' => 'PSEHK product importer',
-    'description' => 'A form to mess around with.',
+    'description' => 'PSEHK product importer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('importer_form'),
     'access callback' => TRUE
@@ -53,6 +53,8 @@ function importer_form_submit($form, &$form_state)
         break;
       case "product_variation":
       case "product_specification":
+        importer_handle_product_specification_tab($sheet);
+        break;
       case "pq_curve":
       case "support_document":
       case "accessory":
@@ -62,6 +64,7 @@ function importer_form_submit($form, &$form_state)
         break;
     }
   }
+  drupal_set_message(t('Excel file imported'));
   $reader->close();
 }
 
@@ -72,6 +75,16 @@ function importer_handle_product_tab($sheet)
       continue;
     }
     importer_create_product_node($row);
+  }
+}
+
+function importer_handle_product_specification_tab($sheet)
+{
+  foreach ($sheet->getRowIterator() as $key => $row) {
+//    if ($key == 1) {
+//      continue;
+//    }
+    importer_create_product_specification($row);
   }
 }
 
@@ -88,7 +101,7 @@ function importer_create_product_node($row)
   $product_catagory = $row[6];
   $photos = $row[7];
 
-  // data preprocessing
+  // field values preprocessing
   $product_description = "<ul><li>" . implode("</li><li>", explode("\n", $product_description)) . "</li></ul>";
   $features = "<ul><li>" . implode("</li><li>", explode("\n", $features)) . "</li></ul>";
   $terms = taxonomy_get_term_by_name($product_catagory);
@@ -101,7 +114,6 @@ function importer_create_product_node($row)
     }
   }
 
-
   // create node
   $values = array(
     'type' => 'product',
@@ -113,32 +125,53 @@ function importer_create_product_node($row)
   $entity = entity_create('node', $values);
   $ewrapper = entity_metadata_wrapper('node', $entity);
 
-//  $field = array('alt' => '',
-//    'title' => '',
-//    'fid' => 97,
-//    'display' => 1,
-//    'width' => 100,
-//    'height' => 100,
-//    'image_field_caption' => array
-//    (
-//      'value' => '',
-//      'format' => 'full_html',
-//    ),
-//  );
-//  $ewrapper->field_product_thumbnail->set($field);
 
   // set node values
   $ewrapper->title->set($title);
   $ewrapper->field_product_name->set($product_name);
-  $ewrapper->field_product_thumbnail->set(importer_get_file_by_filename($product_thumbnail));
-  $ewrapper->field_product_description->set(['value' => $product_description]);
+  $ewrapper->field_product_thumbnail->set((array)importer_get_file_by_filename($product_thumbnail));
+  $ewrapper->field_product_description->set(['value' => $product_description, 'format' => 'full_html']);
   $ewrapper->field_product_sku->set($product_sku);
-  $ewrapper->field_product_featues->set(['value' => $features]);
+  $ewrapper->field_product_featues->set(['value' => $features, 'format' => 'full_html']);
   $ewrapper->field_product_catagory->set($folderid);
   $ewrapper->save();
 }
 
+function importer_create_product_specification($row)
+{
+  global $user;
+  $product_title = $row[0]; // "FV-17CU7"
 
+
+  $title = "abc";
+  $field_voltage = "110";
+
+
+  // create node
+  $values = array(
+    'type' => 'product_specification',
+    'uid' => $user->uid,
+    'status' => 1,
+    'comment' => 1,
+    'promote' => 0,
+  );
+  $entity = entity_create('node', $values);
+  $ewrapper = entity_metadata_wrapper('node', $entity);
+
+
+  // set node values
+//  $ewrapper->title->set($title);
+//  $ewrapper->field_voltage->set($field_voltage);
+//  $ewrapper->save();
+
+  // update product
+//  $product = importer_get_prodcut_by_title($product_title);
+//  $node_wrapper = entity_metadata_wrapper('node', $product);
+//  $node_wrapper->field_product_specification->set([$ewrapper->value()->nid]);
+//  $node_wrapper->save();
+}
+
+// helper function: get_product_by_title
 function importer_get_prodcut_by_title($title)
 {
   $query = new EntityFieldQuery();
@@ -146,14 +179,17 @@ function importer_get_prodcut_by_title($title)
     ->propertyCondition('title', '%' . $title . '%', 'LIKE');
   $result = $query->execute();
   if (!empty($result['node'])) {
-    $files = entity_load('node', array_keys($result['node']));
-    $drupal_product_node = (array)current($files); // get first item
+    foreach ($result['node'] as $node) {
+      if ($node->type == 'product') {
+        $node = entity_load('node', [$node->nid]);
+        return current($node);
+      }
+    }
   }
-
-  return $drupal_product_node;
+  return null;
 }
 
-
+// helper function: get_file_by_filename
 function importer_get_file_by_filename($filename)
 {
   $query = new EntityFieldQuery();
@@ -162,7 +198,7 @@ function importer_get_file_by_filename($filename)
   $result = $query->execute();
   if (!empty($result['file'])) {
     $files = entity_load('file', array_keys($result['file']));
-    $drupal_file = (array)current($files); // get first item
+    $drupal_file = current($files); // get first item
   }
 
   return $drupal_file;
