@@ -88,20 +88,6 @@ function importer_create_product_node($row)
   $product_catagory = $row[6];
   $photos = $row[7];
 
-//  $title = "newtitle";
-//  $product_name = "newprodcutname";
-//  $product_thumbnail = "group-3.jpg";
-//  $product_description = "newdescription
-//line1
-//line2
-//line3";
-//  $product_sku = "newproductsku";
-//  $features = "newfeatures
-//line1
-//line2
-//line3";
-//  $product_catagory = "ceiling mount";
-
   // data preprocessing
   $product_description = "<ul><li>" . implode("</li><li>", explode("\n", $product_description)) . "</li></ul>";
   $features = "<ul><li>" . implode("</li><li>", explode("\n", $features)) . "</li></ul>";
@@ -114,14 +100,7 @@ function importer_create_product_node($row)
       }
     }
   }
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'file')
-    ->propertyCondition('filename', "%" . $product_thumbnail . "%", 'LIKE');
-  $result = $query->execute();
-  if (!empty($result['file'])) {
-    $files = entity_load('file', array_keys($result['file']));
-    $drupal_product_thumbnail = (array)current($files); // get first item
-  }
+
 
   // create node
   $values = array(
@@ -151,7 +130,7 @@ function importer_create_product_node($row)
   // set node values
   $ewrapper->title->set($title);
   $ewrapper->field_product_name->set($product_name);
-  $ewrapper->field_product_thumbnail->set($drupal_product_thumbnail);
+  $ewrapper->field_product_thumbnail->set(importer_get_file_by_filename($product_thumbnail));
   $ewrapper->field_product_description->set(['value' => $product_description]);
   $ewrapper->field_product_sku->set($product_sku);
   $ewrapper->field_product_featues->set(['value' => $features]);
@@ -172,4 +151,19 @@ function importer_get_prodcut_by_title($title)
   }
 
   return $drupal_product_node;
+}
+
+
+function importer_get_file_by_filename($filename)
+{
+  $query = new EntityFieldQuery();
+  $query->entityCondition('entity_type', 'file')
+    ->propertyCondition('filename', '%' . $filename . '%', 'LIKE');
+  $result = $query->execute();
+  if (!empty($result['file'])) {
+    $files = entity_load('file', array_keys($result['file']));
+    $drupal_file = (array)current($files); // get first item
+  }
+
+  return $drupal_file;
 }
