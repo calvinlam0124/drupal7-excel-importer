@@ -51,7 +51,7 @@ function importer_form_submit($form, &$form_state)
       case "product":
         importer_handle_product_tab($sheet);
         break;
-      case "product_variation":
+//      case "product_variation":
       case "product_specification":
         importer_handle_product_specification_tab($sheet);
         break;
@@ -140,7 +140,244 @@ function importer_create_product_node($row)
 function importer_create_product_specification($row)
 {
   global $user;
+
   $product_title = $row[0]; // "FV-17CU7"
+  $voltage = $row[1];
+  $frequency = $row[2];
+  $air_volume_super_cmh = $row[3];
+
+  $air_volume_hi_cmh = $row[4];
+  $air_volume_lo_cmh = $row[5];
+  $air_volume_cmh = $row[6];
+  $air_volume_super_cfm = $row[7];
+
+  $air_volume_lo_cfm = $row[8];
+  $air_volume_cfm = $row[9];
+  $air_volume_exhaust_cmh = $row[10];
+  $air_volume_intake_cmh = $row[11];
+
+  $air_volume_exhaust_cfm = $row[12];
+  $air_volume_intake_cfm = $row[13];
+  $air_volume_v_hi_cmh = $row[14];
+  $air_volume_v_lo_cmh = $row[15];
+
+  $air_volume_v_hi_cfm = $row[16];
+  $air_volume_v_lo_cfm = $row[17];
+  $air_volume_ap_hi_m3min = $row[18];
+  $air_volume_ap_mid_m3min = $row[19];
+
+  $air_volume_ap_lo_m3min = $row[20];
+  $air_volume_aph_hi_m3m = $row[21];
+  $air_volume_aph_mid_m3 = $row[22];
+  $air_volume_aph_lo_m = $row[23];
+
+  $consumption_normal_super_w = $row[24];
+  $consumption_normal_hi_w = $row[25];
+  $consumption_normal_lo_w = $row[26];
+  $consumption_normal_w = $row[27];
+
+  $consumption_normal_mid_w = $row[28];
+  $consumption_exhaust_w = $row[29];
+  $consumption_intake_w = $row[30];
+  $consumption_v_hi_w = $row[31];
+
+  $consumption_v_lo_w = $row[32];
+  $consumption_heat_hi_w = $row[33];
+  $consumption_heat_lo_w = $row[34];
+  $consumption_sauna_hi_w = $row[35];
+
+  $consumption_sauna_lo_w = $row[36];
+  $consumption_dry_hi_w = $row[37];
+  $consumption_dry_lo_w = $row[38];
+  $consumption_ap_hi_w = $row[39];
+
+  $consumption_ap_mid_w = $row[40];
+  $consumption_ap_lo_w = $row[41];
+  $consumption_aph_hi_w = $row[42];
+  $consumption_aph_mid_w = $row[43];
+
+  $consumption_aph_lo_w = $row[44];
+  $consumption_heat_on_hi_w = $row[45];
+  $consumption_heat_on_lo_w = $row[46];
+  $consumption_heaton_w = $row[47];
+
+  $consumption_heat_off_hi_w = $row[48];
+  $consumption_heat_off_lo_w = $row[49];
+  $consumption_heatoff_w = $row[50];
+  $consumption_fan_hi_w = $row[51];
+
+  $consumption_fan_lo_w = $row[52];
+  $consumption_fan_light_hi_w = $row[53];
+  $consumption_fan_light_lo_w = $row[54];
+  $current_super_a = $row[55];
+
+  $current_hi_a = $row[56];
+  $current_lo_a = $row[57];
+  $current_a = $row[58];
+  $current_mid_a = $row[59];
+
+  $current_exhaust = $row[60];
+  $current_intake = $row[61];
+  $current_ap_hi_a = $row[62];
+  $current_ap_mid_a = $row[63];
+
+  $current_ap_lo_a = $row[64];
+  $current_aph_hi_a = $row[65];
+  $current_aph_mid_a = $row[66];
+  $current_aph_lo_a = $row[67];
+
+  $current_heat_on_hi_a = $row[68];
+  $current_heat_on_lo_a = $row[69];
+  $current_heat_on_a = $row[70];
+  $current_heat_off_lo_a = $row[71];
+
+  $current_heat_off_hi_a = $row[72];
+  $current_heat_off_a = $row[73];
+  $current_fan_lo_a = $row[74];
+  $current_fan_hi_a = $row[75];
+
+  $current_fan_hi_a = $row[76];
+  $current_fan_light_hi_a = $row[77];
+  $current_fan_light_lo_a = $row[78];
+  $rpm_normal_super_min1 = $row[79];
+
+  $rpm_normal_hi_min1 = $row[80];
+  $rpm_normal_mid_min1 = $row[81];
+  $rpm_normal_lo_min1 = $row[82];
+  $rpm_normal_min1 = $row[83];
+
+  $rpm_exhaust_min1 = $row[84];
+  $rpm_intake_min1 = $row[85];
+  $noise_hi_dba = $row[86];
+  $noise_lo_dba = $row[87];
+
+  $noise_dba = $row[88];
+  $noise_exhaust_dba = $row[89];
+  $noise_intake_dba = $row[90];
+  $noise_v_hi_dba = $row[91];
+
+  $noise_v_lo_dba = $row[92];
+  $noise_heat_hi_dba = $row[93];
+  $noise_heat_lo_dba = $row[94];
+  $noise_sauna_sweat_dba = $row[95];
+
+  $noise_sauna_moist_dba = $row[96];
+  $noise_dry_hi_dba = $row[97];
+  $noise_dry_lo_dba = $row[98];
+  $noise_ap_hi_dba = $row[99];
+
+  $noise_ap_mid_dba = $row[100];
+  $noise_ap_lo_db_ = $row[101];
+  $noise_aph_hi_dba = $row[102];
+  $noise_aph_mid_dba = $row[103];
+
+  $noise_aph_lo_dba = $row[104];
+  $weight = $row[105];
+  $installation_space = $row[106];
+  $duct_size = $row[107];
+
+  $impeller_diameter = $row[108];
+  $ambient_temperature = $row[109];
+  $ip_rating = $row[110];
+  $feature = $row[111];
+
+  $note = $row[112];
+  $phase = $row[113];
+  $cs_hi_dba = $row[114];
+  $cs_lo_dba = $row[115];
+
+  $ss_hi_dba = $row[116];
+  $ss_lo_dba = $row[117];
+  $ds_hi_dba = $row[118];
+  $ds_lo_dba = $row[119];
+
+  $wheel_diameter_cm = $row[120];
+  $hood_diameter_mm = $row[121];
+  $hood_thickness_outside_mm = $row[122];
+  $cap_diameter_mm = $row[123];
+
+  $cap_thickness_outside_mm = $row[412];
+  $apd_mm = $row[125];
+  $dimension_of_net_mm = $row[126];
+  $av_hi_ms = $row[127];
+
+  $av_lo_ms = $row[128];
+  $av_ms = $row[129];
+  $av_hi_mmin = $row[130];
+  $av_lo_mmin = $row[131];
+
+  $av_mid_mmin = $row[132];
+  $av_hi_ftmin = $row[133];
+  $av_lo_ftmin = $row[134];
+  $av_mid_ftmin = $row[135];
+
+  $ad_hi_m3min = $row[136];
+  $ad_lo_m3min = $row[137];
+  $ad_mid_m3min = $row[138];
+  $ad_hi_ft3min = $row[139];
+
+  $ad_lo_ft3min = $row[140];
+  $ad_mid_ft3min = $row[141];
+  $dehumidifying_capacity = $row[142];
+  $water_tank_capacity = $row[143];
+
+  $dimension_h_mm = $row[144];
+  $dimension_h_mm = $row[145];
+  $dimension_w_mm = $row[146];
+  $dimension_d_mm = $row[147];
+
+  $humidifying_capacity_ml_h = $row[148];
+  $applicable_area_m2 = $row[149];
+  $applicable_area_ft2 = $row[150];
+  $effective_distance_m = $row[151];
+
+  $effective_distance_ft = $row[152];
+  $ov_hi_ms = $row[153];
+  $ov_lo_ms = $row[154];
+  $drying_time = $row[155];
+
+  $maximum_capacity = $row[156];
+  $capacity_at_12m = $row[157];
+  $total_head_m = $row[158];
+  $suction_head = $row[159];
+
+  $motor_power = $row[160];
+  $input_wattage = $row[161];
+  $output_wattage = $row[162];
+  $switch_on_pressure_kgfcm2 = $row[163];
+
+  $switch_off_pressure_kgfcm2 = $row[164];
+  $sp_inch = $row[165];
+  $sp_mm = $row[166];
+  $dp_inch = $row[167];
+
+  $dp_mm = $row[168];
+  $pp_inch = $row[169];
+  $pp_mm = $row[170];
+  $size_l = $row[171];
+
+  $size_w = $row[172];
+  $size_h = $row[173];
+  $awt = $row[174];
+
+
+  krumo($row);
+  die("die");
+
+
+  $file_temp = file_get_contents('./profiles/multisite/files/official-photo.png');
+  $file_temp = file_save_data($file_temp, file_directory_path() .'/official_photos/official-photo.png', FILE_EXISTS_RENAME);
+  $node->field_photo = array(
+    array(
+      'fid' => 'upload',
+      'title' => basename($file_temp),
+      'filename' => basename($file_temp),
+      'filepath' => $file_temp,
+      'filesize' => filesize($file_temp),
+    ),
+  );
+
+
 
 
   $title = "abc";
@@ -161,7 +398,10 @@ function importer_create_product_specification($row)
 
   // set node values
 //  $ewrapper->title->set($title);
-//  $ewrapper->field_voltage->set($field_voltage);
+  $ewrapper->$product_title->set($product_title);
+  $ewrapper->$voltage->set($voltage);
+  $ewrapper->$frequency->set($frequency);
+  $ewrapper->$air_volume_super_cmh->set($air_volume_super_cmh);
 //  $ewrapper->save();
 
   // update product
