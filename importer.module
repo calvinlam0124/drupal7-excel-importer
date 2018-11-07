@@ -88,6 +88,7 @@ function importer_handle_product_specification_tab($sheet)
   }
 }
 
+// create node
 function importer_create_product_node($row)
 {
   global $user;
@@ -142,9 +143,15 @@ function importer_create_product_node($row)
   $ewrapper->field_product_sku->set($product_sku);
   $ewrapper->field_product_featues->set(['value' => $features, 'format' => 'full_html']);
   $ewrapper->field_product_catagory->set($folderid);
+  $ewrapper->field_images_captions->set([
+    (array)importer_get_file_by_filename($product_thumbnail)
+  ]);
+  $ewrapper->field_product_accessories->set([27,28]);
+  $ewrapper->field_related_products->set([189]);
   $ewrapper->save();
 }
 
+// create specification
 function importer_create_product_specification($row)
 {
   global $user;
