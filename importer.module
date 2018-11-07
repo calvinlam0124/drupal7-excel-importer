@@ -20,6 +20,14 @@ function importer_menu()
 
 function importer_form($form, &$form_state)
 {
+
+  $file_name = "abc-123.jpg";
+  importer_image_attribute($file_name, "abc-123-alt", "abc-123-title");
+
+  $re = importer_get_file_by_filename($file_name);
+  krumo($re);
+  die("die");
+
   $form['file'] = array(
     '#type' => 'file',
     '#name' => 'file',
@@ -366,7 +374,7 @@ function importer_create_product_specification($row)
 
 
   $file_temp = file_get_contents('./profiles/multisite/files/official-photo.png');
-  $file_temp = file_save_data($file_temp, file_directory_path() .'/official_photos/official-photo.png', FILE_EXISTS_RENAME);
+  $file_temp = file_save_data($file_temp, file_directory_path() . '/official_photos/official-photo.png', FILE_EXISTS_RENAME);
   $node->field_photo = array(
     array(
       'fid' => 'upload',
@@ -376,8 +384,6 @@ function importer_create_product_specification($row)
       'filesize' => filesize($file_temp),
     ),
   );
-
-
 
 
   $title = "abc";
@@ -397,12 +403,226 @@ function importer_create_product_specification($row)
 
 
   // set node values
-//  $ewrapper->title->set($title);
-  $ewrapper->$product_title->set($product_title);
-  $ewrapper->$voltage->set($voltage);
-  $ewrapper->$frequency->set($frequency);
-  $ewrapper->$air_volume_super_cmh->set($air_volume_super_cmh);
-//  $ewrapper->save();
+  //$ewrapper->title->set($title);
+  $ewrapper->product_title->set($product_title);
+  $ewrapper->voltage->set($voltage);
+  $ewrapper->frequency->set($frequency);
+  $ewrapper->air_volume_super_cmh->set($air_volume_super_cmh);
+
+  $ewrapper->air_volume_hi_cmh->set($product_title);
+  $ewrapper->air_volume_lo_cmh->set($product_title);
+  $ewrapper->air_volume_cmh->set($product_title);
+  $ewrapper->air_volume_super_cfm->set($product_title);
+
+  $ewrapper->air_volume_lo_cfm->set($product_title);
+  $ewrapper->air_volume_cfm->set($product_title);
+  $ewrapper->air_volume_exhaust_cmh->set($product_title);
+  $ewrapper->air_volume_intake_cmh->set($product_title);
+
+  $ewrapper->air_volume_exhaust_cfm->set($product_title);
+  $ewrapper->air_volume_intake_cfm->set($product_title);
+  $ewrapper->air_volume_v_hi_cmh->set($product_title);
+  $ewrapper->air_volume_v_lo_cmh->set($product_title);
+
+  $ewrapper->air_volume_v_hi_cfm->set($product_title);
+  $ewrapper->air_volume_v_lo_cfm->set($product_title);
+  $ewrapper->air_volume_ap_hi_m3min->set($product_title);
+  $ewrapper->air_volume_ap_mid_m3min->set($product_title);
+
+  $ewrapper->air_volume_ap_lo_m3min->set($product_title);
+  $ewrapper->air_volume_aph_hi_m3m->set($product_title);
+  $ewrapper->air_volume_aph_mid_m3->set($product_title);
+  $ewrapper->air_volume_aph_lo_m->set($product_title);
+
+  $ewrapper->consumption_normal_super_w->set($product_title);
+  $ewrapper->consumption_normal_hi_w->set($product_title);
+  $ewrapper->consumption_normal_lo_w->set($product_title);
+  $ewrapper->consumption_normal_w->set($product_title);
+
+  $ewrapper->consumption_normal_mid_w->set($product_title);
+  $ewrapper->consumption_exhaust_w->set($product_title);
+  $ewrapper->consumption_intake_w->set($product_title);
+  $ewrapper->consumption_v_hi_w->set($product_title);
+
+  $ewrapper->consumption_v_lo_w->set($product_title);
+  $ewrapper->consumption_heat_hi_w->set($product_title);
+  $ewrapper->consumption_heat_lo_w->set($product_title);
+  $ewrapper->consumption_sauna_hi_w->set($product_title);
+
+  $ewrapper->consumption_sauna_lo_w->set($product_title);
+  $ewrapper->consumption_dry_hi_w->set($product_title);
+  $ewrapper->consumption_dry_lo_w->set($product_title);
+  $ewrapper->consumption_ap_hi_w->set($product_title);
+
+  $ewrapper->consumption_ap_mid_w->set($product_title);
+  $ewrapper->consumption_ap_lo_w->set($product_title);
+  $ewrapper->consumption_aph_hi_w->set($product_title);
+  $ewrapper->consumption_aph_mid_w->set($product_title);
+
+  $ewrapper->consumption_aph_lo_w->set($product_title);
+  $ewrapper->consumption_heat_on_hi_w->set($product_title);
+  $ewrapper->consumption_heat_on_lo_w->set($product_title);
+  $ewrapper->consumption_heaton_w->set($product_title);
+
+  $ewrapper->consumption_heat_off_hi_w->set($product_title);
+  $ewrapper->consumption_heat_off_lo_w->set($product_title);
+  $ewrapper->consumption_heatoff_w->set($product_title);
+  $ewrapper->consumption_fan_hi_w->set($product_title);
+
+  $ewrapper->consumption_fan_lo_w->set($product_title);
+  $ewrapper->consumption_fan_light_hi_w->set($product_title);
+  $ewrapper->consumption_fan_light_lo_w->set($product_title);
+  $ewrapper->current_super_a->set($product_title);
+
+  $ewrapper->current_hi_a->set($product_title);
+  $ewrapper->current_lo_a->set($product_title);
+  $ewrapper->current_a->set($product_title);
+  $ewrapper->current_mid_a->set($product_title);
+
+  $ewrapper->current_exhaust->set($product_title);
+  $ewrapper->current_intake->set($product_title);
+  $ewrapper->current_ap_hi_a->set($product_title);
+  $ewrapper->current_ap_mid_a->set($product_title);
+
+  $ewrapper->current_ap_lo_a->set($product_title);
+  $ewrapper->current_aph_hi_a->set($product_title);
+  $ewrapper->current_aph_mid_a->set($product_title);
+  $ewrapper->current_aph_lo_a->set($product_title);
+
+  $ewrapper->current_heat_on_hi_a->set($product_title);
+  $ewrapper->current_heat_on_lo_a->set($product_title);
+  $ewrapper->current_heat_on_a->set($product_title);
+  $ewrapper->current_heat_off_lo_a->set($product_title);
+
+  $ewrapper->current_heat_off_hi_a->set($product_title);
+  $ewrapper->current_heat_off_a->set($product_title);
+  $ewrapper->current_fan_lo_a->set($product_title);
+  $ewrapper->current_fan_hi_a->set($product_title);
+
+  $ewrapper->current_fan_hi_a->set($product_title);
+  $ewrapper->current_fan_light_hi_a->set($product_title);
+  $ewrapper->current_fan_light_lo_a->set($product_title);
+  $ewrapper->rpm_normal_super_min1->set($product_title);
+
+  $ewrapper->rpm_normal_hi_min1->set($product_title);
+  $ewrapper->rpm_normal_mid_min1->set($product_title);
+  $ewrapper->rpm_normal_lo_min1->set($product_title);
+  $ewrapper->rpm_normal_min1->set($product_title);
+
+  $ewrapper->rpm_exhaust_min1->set($product_title);
+  $ewrapper->rpm_intake_min1->set($product_title);
+  $ewrapper->noise_hi_dba->set($product_title);
+  $ewrapper->noise_lo_dba->set($product_title);
+
+  $ewrapper->noise_dba->set($product_title);
+  $ewrapper->noise_exhaust_dba->set($product_title);
+  $ewrapper->noise_intake_dba->set($product_title);
+  $ewrapper->noise_v_hi_dba->set($product_title);
+
+  $ewrapper->noise_v_lo_dba->set($product_title);
+  $ewrapper->noise_heat_hi_dba->set($product_title);
+  $ewrapper->noise_heat_lo_dba->set($product_title);
+  $ewrapper->noise_sauna_sweat_dba->set($product_title);
+
+  $ewrapper->noise_sauna_moist_dba->set($product_title);
+  $ewrapper->noise_dry_hi_dba->set($product_title);
+  $ewrapper->noise_dry_lo_dba->set($product_title);
+  $ewrapper->noise_ap_hi_dba->set($product_title);
+
+  $ewrapper->noise_ap_mid_dba->set($product_title);
+  $ewrapper->noise_ap_lo_db_->set($product_title);
+  $ewrapper->noise_aph_hi_dba->set($product_title);
+  $ewrapper->noise_aph_mid_dba->set($product_title);
+
+  $ewrapper->noise_aph_lo_dba->set($product_title);
+  $ewrapper->weight->set($product_title);
+  $ewrapper->installation_space->set($product_title);
+  $ewrapper->duct_size->set($product_title);
+
+  $ewrapper->impeller_diameter->set($product_title);
+  $ewrapper->ambient_temperature->set($product_title);
+  $ewrapper->ip_rating->set($product_title);
+  $ewrapper->feature->set($product_title);
+
+  $ewrapper->note->set($product_title);
+  $ewrapper->phase->set($product_title);
+  $ewrapper->cs_hi_dba->set($product_title);
+  $ewrapper->cs_lo_dba->set($product_title);
+
+  $ewrapper->ss_hi_dba->set($product_title);
+  $ewrapper->ss_lo_dba->set($product_title);
+  $ewrapper->ds_hi_dba->set($product_title);
+  $ewrapper->ds_lo_dba->set($product_title);
+
+  $ewrapper->wheel_diameter_cm->set($product_title);
+  $ewrapper->hood_diameter_mm->set($product_title);
+  $ewrapper->hood_thickness_outside_mm->set($product_title);
+  $ewrapper->cap_diameter_mm->set($product_title);
+
+  $ewrapper->cap_thickness_outside_mm->set($product_title);
+  $ewrapper->apd_mm->set($product_title);
+  $ewrapper->dimension_of_net_mm->set($product_title);
+  $ewrapper->av_hi_ms->set($product_title);
+
+  $ewrapper->av_lo_ms->set($product_title);
+  $ewrapper->av_ms->set($product_title);
+  $ewrapper->av_hi_mmin->set($product_title);
+  $ewrapper->av_lo_mmin->set($product_title);
+
+  $ewrapper->av_mid_mmin->set($product_title);
+  $ewrapper->av_hi_ftmin->set($product_title);
+  $ewrapper->av_lo_ftmin->set($product_title);
+  $ewrapper->av_mid_ftmin->set($product_title);
+
+  $ewrapper->ad_hi_m3min->set($product_title);
+  $ewrapper->ad_lo_m3min->set($product_title);
+  $ewrapper->ad_mid_m3min->set($product_title);
+  $ewrapper->ad_hi_ft3min->set($product_title);
+
+  $ewrapper->ad_lo_ft3min->set($product_title);
+  $ewrapper->ad_mid_ft3min->set($product_title);
+  $ewrapper->dehumidifying_capacity->set($product_title);
+  $ewrapper->water_tank_capacity->set($product_title);
+
+  $ewrapper->dimension_h_mm->set($product_title);
+  $ewrapper->dimension_h_mm->set($product_title);
+  $ewrapper->dimension_w_mm->set($product_title);
+  $ewrapper->dimension_d_mm->set($product_title);
+
+  $ewrapper->humidifying_capacity_ml_h->set($product_title);
+  $ewrapper->applicable_area_m2->set($product_title);
+  $ewrapper->applicable_area_ft2->set($product_title);
+  $ewrapper->effective_distance_m->set($product_title);
+
+  $ewrapper->effective_distance_ft->set($product_title);
+  $ewrapper->ov_hi_ms->set($product_title);
+  $ewrapper->ov_lo_ms->set($product_title);
+  $ewrapper->drying_time->set($product_title);
+
+  $ewrapper->maximum_capacity->set($product_title);
+  $ewrapper->capacity_at_12m->set($product_title);
+  $ewrapper->total_head_m->set($product_title);
+  $ewrapper->suction_head->set($product_title);
+
+  $ewrapper->motor_power->set($product_title);
+  $ewrapper->input_wattage->set($product_title);
+  $ewrapper->output_wattage->set($product_title);
+  $ewrapper->switch_on_pressure_kgfcm2->set($product_title);
+
+  $ewrapper->switch_off_pressure_kgfcm2->set($product_title);
+  $ewrapper->sp_inch->set($product_title);
+  $ewrapper->sp_mm->set($product_title);
+  $ewrapper->dp_inch->set($product_title);
+
+  $ewrapper->dp_mm->set($product_title);
+  $ewrapper->pp_inch->set($product_title);
+  $ewrapper->pp_mm->set($product_title);
+  $ewrapper->size_l->set($product_title);
+
+  $ewrapper->size_w->set($product_title);
+  $ewrapper->size_h->set($product_title);
+  $ewrapper->awt->set($product_title);
+  //$ewrapper->save();
 
   // update product
 //  $product = importer_get_prodcut_by_title($product_title);
@@ -438,8 +658,71 @@ function importer_get_file_by_filename($filename)
   $result = $query->execute();
   if (!empty($result['file'])) {
     $files = entity_load('file', array_keys($result['file']));
-    $drupal_file = current($files); // get first item
+krumo($files);
+    $drupal_file = end($files); // get first item
   }
 
   return $drupal_file;
+}
+
+
+function importer_image_attribute($file_name, $alt, $title)
+{
+  // get file content
+  $url = getcwd() . "/sites/default/files/lorempixel_1.jpg";
+  $file_content = file_get_contents($url);
+
+  // save image
+  $file_storage_uri = 'public://test/test/' . $file_name;
+  $file = file_save_data($file_content, $file_storage_uri);
+  $file->status = 1;
+  $file->field_image['und'][0] = (array)$file;
+  node_save($file);
+
+  // delete cache
+  $result = db_delete('cache_field')
+    ->condition('cid', 'field:file:' . $file->fid)
+    ->execute();
+
+  // insert alt text
+  $result = db_insert('field_data_field_file_image_alt_text')
+    ->fields(array(
+      'entity_type' => "file",
+      'bundle' => "image",
+      'deleted' => 0,
+      'entity_id' => $file->fid,
+      'revision_id' => $file->fid,
+      'language' => "und",
+      'delta' => "0",
+      'field_file_image_alt_text_value' => $alt,
+      'field_file_image_alt_text_format' => null,
+    ))
+    ->execute();
+
+  // update alt text
+//  $result = db_update('field_data_field_file_image_alt_text')
+//    ->fields(array('field_file_image_alt_text_value' => $alt))
+//    ->condition('entity_id', $file->fid, '=')
+//    ->execute();
+
+  // insert title text
+  $result = db_insert('field_data_field_file_image_title_text')
+    ->fields(array(
+      'entity_type' => "file",
+      'bundle' => "image",
+      'deleted' => 0,
+      'entity_id' => $file->fid,
+      'revision_id' => $file->fid,
+      'language' => "und",
+      'delta' => "0",
+      'field_file_image_title_text_value' => $title,
+      'field_file_image_title_text_format' => null,
+    ))
+    ->execute();
+
+  // update title text
+//  $result = db_update('field_data_field_file_image_title_text')
+//    ->fields(array('field_file_image_title_text_value' => $title))
+//    ->condition('entity_id', $file->fid, '=')
+//    ->execute();
 }
