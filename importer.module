@@ -20,14 +20,6 @@ function importer_menu()
 
 function importer_form($form, &$form_state)
 {
-
-  $file_name = "abc-123.jpg";
-  importer_image_attribute($file_name, "abc-123-alt", "abc-123-title");
-
-  $re = importer_get_file_by_filename($file_name);
-  krumo($re);
-  die("die");
-
   $form['file'] = array(
     '#type' => 'file',
     '#name' => 'file',
@@ -60,16 +52,16 @@ function importer_form_submit($form, &$form_state)
         importer_handle_product_tab($sheet);
         break;
 //      case "product_variation":
-      case "product_specification":
-        importer_handle_product_specification_tab($sheet);
-        break;
-      case "pq_curve":
-      case "support_document":
-      case "accessory":
-      case "related_product":
-      default:
-        importer_handle_product_tab($sheet);
-        break;
+//      case "product_specification":
+//        importer_handle_product_specification_tab($sheet);
+//        break;
+//      case "pq_curve":
+//      case "support_document":
+//      case "accessory":
+//      case "related_product":
+//      default:
+//        importer_handle_product_tab($sheet);
+//        break;
     }
   }
   drupal_set_message(t('Excel file imported'));
@@ -103,11 +95,15 @@ function importer_create_product_node($row)
   $title = $row[0];
   $product_name = $row[1];
   $product_thumbnail = $row[2];
-  $product_description = $row[3];
-  $product_sku = $row[4];
-  $features = $row[5];
-  $product_catagory = $row[6];
-  $photos = $row[7];
+  $product_thumbnail_alt = $row[3];
+
+  $product_thumbnail_title = $row[4];
+  $product_description = $row[5];
+  $product_sku = $row[6];
+  $features = $row[7];
+  $product_catagory = $row[8];
+
+  $photos = $row[9];
 
   // field values preprocessing
   $product_description = "<ul><li>" . implode("</li><li>", explode("\n", $product_description)) . "</li></ul>";
@@ -132,6 +128,10 @@ function importer_create_product_node($row)
   );
   $entity = entity_create('node', $values);
   $ewrapper = entity_metadata_wrapper('node', $entity);
+
+
+  // save image
+  $file = importer_image_attribute($product_thumbnail, $product_thumbnail_alt, $product_thumbnail_title);
 
 
   // set node values
@@ -658,22 +658,21 @@ function importer_get_file_by_filename($filename)
   $result = $query->execute();
   if (!empty($result['file'])) {
     $files = entity_load('file', array_keys($result['file']));
-krumo($files);
     $drupal_file = end($files); // get first item
   }
 
   return $drupal_file;
 }
 
-
+// helper function: insert new image and its attributes
 function importer_image_attribute($file_name, $alt, $title)
 {
   // get file content
-  $url = getcwd() . "/sites/default/files/lorempixel_1.jpg";
+  $url = getcwd() . "/sites/default/files/psehk_importer/to_be_upload/" . $file_name;
   $file_content = file_get_contents($url);
 
   // save image
-  $file_storage_uri = 'public://test/test/' . $file_name;
+  $file_storage_uri = 'public://psehk_importer/product_thumbnail/' . $file_name;
   $file = file_save_data($file_content, $file_storage_uri);
   $file->status = 1;
   $file->field_image['und'][0] = (array)$file;
@@ -699,12 +698,6 @@ function importer_image_attribute($file_name, $alt, $title)
     ))
     ->execute();
 
-  // update alt text
-//  $result = db_update('field_data_field_file_image_alt_text')
-//    ->fields(array('field_file_image_alt_text_value' => $alt))
-//    ->condition('entity_id', $file->fid, '=')
-//    ->execute();
-
   // insert title text
   $result = db_insert('field_data_field_file_image_title_text')
     ->fields(array(
@@ -720,9 +713,5 @@ function importer_image_attribute($file_name, $alt, $title)
     ))
     ->execute();
 
-  // update title text
-//  $result = db_update('field_data_field_file_image_title_text')
-//    ->fields(array('field_file_image_title_text_value' => $title))
-//    ->condition('entity_id', $file->fid, '=')
-//    ->execute();
+  return $file;
 }
