@@ -1,10 +1,28 @@
 <?php
 /*
+ * Install Spout (unzip and copy Spout to 'sites/all/libraries/Spout/')
  * Enable this module
- * install Spout (unzip and copy Spout to 'sites/all/libraries/Spout/')
- * mkdir '/sites/default/files/psehk_importer/to_be_upload/' and 'public://psehk_importer/product_thumbnail2/'
+ *
+ * mkdir '/sites/default/files/psehk_importer/to_be_upload/' and 'public://psehk_importer/product_thumbnail/'
  * Add a new field named "field_spec_image" at Product Specification
  * Add a new field named "field_spec_image_remark" at Product Specification
+ *
+ * */
+
+
+/*
+ * SQL queries
+ *
+
+SELECT * FROM pskhk.field_data_field_file_image_alt_text;
+Show variables where Variable_name like '%slow%';
+
+select * from watchdog;
+select now();
+
+select *, SUBSTRING(`variables`, 1, 2500), FROM_UNIXTIME(`timestamp`) AS 'date_formatted'
+ from watchdog order by wid DESC;
+
  *
  * */
 require_once(getcwd() . "/sites/all/libraries/Spout/Autoloader/autoload.php");
@@ -50,25 +68,29 @@ function importer_form_validate($form, &$form_state)
 
 function importer_form_submit($form, &$form_state)
 {
+  cache_clear_all();
   $filePath = $_FILES["file"]["tmp_name"];
   $reader = ReaderFactory::create(Type::XLSX);
   $reader->open($filePath);
   foreach ($reader->getSheetIterator() as $sheet) {
     switch ($sheet->getName()) {
-      case "product":
-        importer_handle_product_tab($sheet);
+//      case "product":
+//        importer_handle_product_tab($sheet);
+//        break;
+      case "product_variation":
+        importer_handle_product_variation_tab($sheet);
         break;
-//      case "product_variation":
-      case "product_specification":
-        importer_handle_product_specification_tab($sheet);
-        break;
+//      case "product_specification":
+//        importer_handle_product_specification_tab($sheet);
+//        break;
+
 //      case "pq_curve":
 //      case "support_document":
 //      case "accessory":
 //      case "related_product":
-//      default:
-//        importer_handle_product_tab($sheet);
-//        break;
+      default:
+        echo $sheet->getName() . "<br />";
+        break;
     }
   }
   drupal_set_message(t('Excel file imported'));
@@ -92,6 +114,16 @@ function importer_handle_product_specification_tab($sheet)
       continue;
     }
     importer_create_product_specification($row);
+  }
+}
+
+function importer_handle_product_variation_tab($sheet)
+{
+  foreach ($sheet->getRowIterator() as $key => $row) {
+    if ($key == 1) {
+      continue;
+    }
+    importer_create_product_variation($row);
   }
 }
 
@@ -623,16 +655,70 @@ function importer_create_product_specification($row)
 
   // image
   $ewrapper->field_spec_image->set((array)importer_get_file_by_filename($spec_image));
-//  $ewrapper->field_spec_image_remark->set(['value' => $spec_image_remark, 'format' => 'full_html']);
+  $ewrapper->field_spec_image_remark->set($spec_image_remark);
   $ewrapper->save();
+
 
   // update product
   $product = importer_get_prodcut_by_title($product_title);
-  //drupal_set_message(t('product node id:' . $product->nid));
-  //drupal_set_message(t('product spec node id:' . $ewrapper->value()->nid));
+//  drupal_set_message(t('product node id:' . $product->nid));
+//  drupal_set_message(t('product spec node id:' . $ewrapper->value()->nid));
   $node_wrapper = entity_metadata_wrapper('node', $product);
   $node_wrapper->field_product_specification->set([$ewrapper->value()->nid]);
   $node_wrapper->save();
+}
+
+// create variation
+function importer_create_product_variation($row)
+{
+  global $user;
+
+  $product_title = $row[0]; // "FV-17CU7"
+  $sku = $row[1];
+  $variation_title = $row[2];
+  $price = $row[3];
+
+  $status = $row[4];
+  $color = $row[5];
+  $product_color = $row[6]; // #FF7537
+  $image = $row[7];
+
+  $image_color = $row[8];
+  $image_color_large = $row[9];
+
+  // create commerce_product_variation
+  $product = commerce_product_new('peshk_product');
+  die("testing"); //@todo: checking
+  $product->field_product_variation_name["und"][0]["value"] = $variation_title;
+  $product->commerce_price["und"][0]["amount"] = $price;
+  $product->status = $status;
+  $product->field_color["und"] = $color;
+  $product->field_product_color["und"][0]["rgb"] = $product_color;
+
+  $product->type = 'peshk_product';
+  $product->sku = $sku; // that should be unique; SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry
+  $product->title = $variation_title;
+  $product->uid = $user->uid;
+  commerce_product_save($product);
+
+  // save product spec image
+//  $file = importer_image_attribute($spec_image, $spec_image_alt, $spec_image_title);
+
+  // set node values
+//  $ewrapper->field_voltage->set($voltage);
+//  $ewrapper->field_frequency->set($frequency);
+//  $ewrapper->field_air_volume_super_cmh->set($air_volume_super_cmh);
+//  // image
+//  $ewrapper->field_spec_image->set((array)importer_get_file_by_filename($spec_image));
+//  $ewrapper->field_spec_image_remark->set($spec_image_remark);
+//  $ewrapper->save();
+
+  // update product
+//  $product = importer_get_prodcut_by_title($product_title);
+//  $node_wrapper = entity_metadata_wrapper('node', $product);
+//  $node_wrapper->field_product_specification->set([$ewrapper->value()->nid]);
+//  $node_wrapper->save();
+
 }
 
 // helper function: get_product_by_title
@@ -643,12 +729,17 @@ function importer_get_prodcut_by_title($title)
     ->propertyCondition('title', '%' . $title . '%', 'LIKE');
   $result = $query->execute();
   if (!empty($result['node'])) {
-    foreach ($result['node'] as $node) {
-      if ($node->type == 'product') {
-        $node = entity_load('node', [$node->nid]);
-        return end($node); // get latest item
-      }
-    }
+    $files = entity_load('node', array_keys($result['node']));
+    $drupal_file = end($files); // get latest item
+//    foreach ($result['node'] as $node) {
+//      if ($node->type == 'product') {
+//        $node = entity_load('node', [$node->nid]);
+//        krumo($node);
+//        die("die");
+//        return current($node);
+//      }
+//    }
+    return $drupal_file;
   }
   return null;
 }
