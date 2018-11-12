@@ -1,7 +1,7 @@
 <?php
 /*
  * Install Spout (unzip and copy Spout to 'sites/all/libraries/Spout/')
- * Enable this module
+ * Enable this module "PSEHK product importer (importer)"
  *
  * mkdir '/sites/default/files/psehk_importer/to_be_upload/' and 'public://psehk_importer/product_thumbnail/'
  * Add a new field named "field_spec_image" at Product Specification
@@ -688,12 +688,16 @@ function importer_create_product_variation($row)
 
   // create commerce_product_variation
   $product = commerce_product_new('peshk_product');
-  die("testing"); //@todo: checking
   $product->field_product_variation_name["und"][0]["value"] = $variation_title;
-  $product->commerce_price["und"][0]["amount"] = $price;
-  $product->status = $status;
-  $product->field_color["und"] = $color;
-  $product->field_product_color["und"][0]["rgb"] = $product_color;
+  krumo($variation_title);
+  $product->commerce_price["und"][0]["amount"] = $price * 100; //@todo: price should * 100
+  $product->commerce_price["und"][0]["currency_code"] = "USD"; //@todo: hard code USD
+  krumo($price);
+  krumo($product);
+  die("testing"); //@todo: checking
+//  $product->status = $status;
+//  $product->field_color["und"] = $color;
+//  $product->field_product_color["und"][0]["rgb"] = $product_color;
 
   $product->type = 'peshk_product';
   $product->sku = $sku; // that should be unique; SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry
