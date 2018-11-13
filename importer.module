@@ -1,28 +1,11 @@
 <?php
 /*
- * Install Spout (unzip and copy Spout to 'sites/all/libraries/Spout/')
  * Enable this module "PSEHK product importer (importer)"
  *
  * mkdir '/sites/default/files/psehk_importer/to_be_upload/' and 'public://psehk_importer/product_thumbnail/'
+ * Add a new field named "field_product_amca_cert" at product
  * Add a new field named "field_spec_image" at Product Specification
  * Add a new field named "field_spec_image_remark" at Product Specification
- *
- * */
-
-
-/*
- * SQL queries
- *
-
-SELECT * FROM pskhk.field_data_field_file_image_alt_text;
-Show variables where Variable_name like '%slow%';
-
-select * from watchdog;
-select now();
-
-select *, SUBSTRING(`variables`, 1, 2500), FROM_UNIXTIME(`timestamp`) AS 'date_formatted'
- from watchdog order by wid DESC;
-
  *
  * */
 require_once(getcwd() . "/sites/all/libraries/Spout/Autoloader/autoload.php");
@@ -38,7 +21,8 @@ function importer_menu()
     'description' => 'PSEHK product importer',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('importer_form'),
-    'access callback' => TRUE
+    'access callback' => TRUE,
+    'menu_name' => 'management',
   );
   return $items;
 }
@@ -74,22 +58,21 @@ function importer_form_submit($form, &$form_state)
   $reader->open($filePath);
   foreach ($reader->getSheetIterator() as $sheet) {
     switch ($sheet->getName()) {
-//      case "product":
-//        importer_handle_product_tab($sheet);
-//        break;
+     case "product":
+       importer_handle_product_tab($sheet);
+       break;
       case "product_variation":
         importer_handle_product_variation_tab($sheet);
         break;
-//      case "product_specification":
-//        importer_handle_product_specification_tab($sheet);
-//        break;
-
+     case "product_specification":
+       importer_handle_product_specification_tab($sheet);
+       break;
 //      case "pq_curve":
 //      case "support_document":
 //      case "accessory":
 //      case "related_product":
       default:
-        echo $sheet->getName() . "<br />";
+        // echo $sheet->getName() . "<br />";
         break;
     }
   }
@@ -171,12 +154,13 @@ function importer_create_product_node($row)
 
   // save image
   $file = importer_image_attribute($product_thumbnail, $product_thumbnail_alt, $product_thumbnail_title);
+  $file = importer_image_attribute($amca_cert);
 
   // set node values
   $ewrapper->title->set($title);
   $ewrapper->field_product_name->set($product_name);
   $ewrapper->field_product_thumbnail->set((array)importer_get_file_by_filename($product_thumbnail));
-//  $ewrapper->field_product_amca_cert->set((array)importer_get_file_by_filename($amca_cert)); //@TODO: AMCA cert
+  $ewrapper->field_product_amca_cert->set((array)importer_get_file_by_filename($amca_cert));
   $ewrapper->field_product_description->set(['value' => $product_description, 'format' => 'full_html']);
   $ewrapper->field_product_sku->set($product_sku);
   $ewrapper->field_product_featues->set(['value' => $features, 'format' => 'full_html']);
@@ -694,7 +678,7 @@ function importer_create_product_variation($row)
   $product->commerce_price["und"][0]["currency_code"] = "USD"; //@todo: hard code USD
   krumo($price);
   krumo($product);
-  die("testing"); //@todo: checking
+  //die("testing"); //@todo: checking
 //  $product->status = $status;
 //  $product->field_color["und"] = $color;
 //  $product->field_product_color["und"][0]["rgb"] = $product_color;
@@ -703,7 +687,11 @@ function importer_create_product_variation($row)
   $product->sku = $sku; // that should be unique; SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry
   $product->title = $variation_title;
   $product->uid = $user->uid;
+  krumo($row);
+  // die("die");
   commerce_product_save($product);
+  // krumo($product);
+  // die("saved product die");
 
   // save product spec image
 //  $file = importer_image_attribute($spec_image, $spec_image_alt, $spec_image_title);
@@ -718,10 +706,12 @@ function importer_create_product_variation($row)
 //  $ewrapper->save();
 
   // update product
-//  $product = importer_get_prodcut_by_title($product_title);
-//  $node_wrapper = entity_metadata_wrapper('node', $product);
-//  $node_wrapper->field_product_specification->set([$ewrapper->value()->nid]);
-//  $node_wrapper->save();
+ $product = importer_get_prodcut_by_title($product_title);
+ $node_wrapper = entity_metadata_wrapper('node', $product);
+//  $node_wrapper->field_product_specification->set([$product->product_id]);
+//  $node_wrapper->field_product_variation["und"][0]["entity_id"] = $product->product_id;
+ $node_wrapper->field_product_variation->set([$product->product_id]);
+ $node_wrapper->save();
 
 }
 
@@ -764,7 +754,7 @@ function importer_get_file_by_filename($filename)
 }
 
 // helper function: insert new image and its attributes
-function importer_image_attribute($file_name, $alt, $title)
+function importer_image_attribute($file_name, $alt=null, $title=null)
 {
   // get file content
   $url = getcwd() . "/sites/default/files/psehk_importer/to_be_upload/" . $file_name;
@@ -778,40 +768,43 @@ function importer_image_attribute($file_name, $alt, $title)
   $file->field_image['und'][0] = (array)$file;
   node_save($file);
 
-  // delete cache
-  $result = db_delete('cache_field')
-    ->condition('cid', 'field:file:' . $file->fid)
-    ->execute();
+  if($alt && $title) {
 
-  // insert alt text
-  $result = db_insert('field_data_field_file_image_alt_text')
-    ->fields(array(
-      'entity_type' => "file",
-      'bundle' => "image",
-      'deleted' => 0,
-      'entity_id' => $file->fid,
-      'revision_id' => $file->fid,
-      'language' => "und",
-      'delta' => "0",
-      'field_file_image_alt_text_value' => $alt,
-      'field_file_image_alt_text_format' => null,
-    ))
-    ->execute();
+    // delete cache
+    $result = db_delete('cache_field')
+      ->condition('cid', 'field:file:' . $file->fid)
+      ->execute();
 
-  // insert title text
-  $result = db_insert('field_data_field_file_image_title_text')
-    ->fields(array(
-      'entity_type' => "file",
-      'bundle' => "image",
-      'deleted' => 0,
-      'entity_id' => $file->fid,
-      'revision_id' => $file->fid,
-      'language' => "und",
-      'delta' => "0",
-      'field_file_image_title_text_value' => $title,
-      'field_file_image_title_text_format' => null,
-    ))
-    ->execute();
+    // insert alt text
+    $result = db_insert('field_data_field_file_image_alt_text')
+      ->fields(array(
+        'entity_type' => "file",
+        'bundle' => "image",
+        'deleted' => 0,
+        'entity_id' => $file->fid,
+        'revision_id' => $file->fid,
+        'language' => "und",
+        'delta' => "0",
+        'field_file_image_alt_text_value' => $alt,
+        'field_file_image_alt_text_format' => null,
+      ))
+      ->execute();
+
+    // insert title text
+    $result = db_insert('field_data_field_file_image_title_text')
+      ->fields(array(
+        'entity_type' => "file",
+        'bundle' => "image",
+        'deleted' => 0,
+        'entity_id' => $file->fid,
+        'revision_id' => $file->fid,
+        'language' => "und",
+        'delta' => "0",
+        'field_file_image_title_text_value' => $title,
+        'field_file_image_title_text_format' => null,
+      ))
+      ->execute();
+  }
 
   return $file;
 }
