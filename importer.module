@@ -58,15 +58,15 @@ function importer_form_submit($form, &$form_state)
   $reader->open($filePath);
   foreach ($reader->getSheetIterator() as $sheet) {
     switch ($sheet->getName()) {
-     case "product":
-       importer_handle_product_tab($sheet);
-       break;
+//      case "product":
+//        importer_handle_product_tab($sheet);
+//        break;
       case "product_variation":
         importer_handle_product_variation_tab($sheet);
         break;
-     case "product_specification":
-       importer_handle_product_specification_tab($sheet);
-       break;
+//      case "product_specification":
+//        importer_handle_product_specification_tab($sheet);
+//        break;
 //      case "pq_curve":
 //      case "support_document":
 //      case "accessory":
@@ -168,7 +168,7 @@ function importer_create_product_node($row)
   $ewrapper->field_images_captions->set([
     (array)importer_get_file_by_filename($product_thumbnail)
   ]);
-  $ewrapper->field_product_accessories->set([27,28]);
+  $ewrapper->field_product_accessories->set([27, 28]);
   $ewrapper->field_related_products->set([
     importer_get_prodcut_by_title("title")->nid
   ]);
@@ -660,59 +660,38 @@ function importer_create_product_variation($row)
   $product_title = $row[0]; // "FV-17CU7"
   $sku = $row[1];
   $variation_title = $row[2];
-  $price = $row[3];
+  $status = $row[3];
 
-  $status = $row[4];
-  $color = $row[5];
-  $product_color = $row[6]; // #FF7537
-  $image = $row[7];
-
-  $image_color = $row[8];
-  $image_color_large = $row[9];
-
-  // create commerce_product_variation
-  $product = commerce_product_new('peshk_product');
-  $product->field_product_variation_name["und"][0]["value"] = $variation_title;
-  krumo($variation_title);
-  $product->commerce_price["und"][0]["amount"] = $price * 100; //@todo: price should * 100
-  $product->commerce_price["und"][0]["currency_code"] = "USD"; //@todo: hard code USD
-  krumo($price);
-  krumo($product);
-  //die("testing"); //@todo: checking
-//  $product->status = $status;
-//  $product->field_color["und"] = $color;
-//  $product->field_product_color["und"][0]["rgb"] = $product_color;
-
-  $product->type = 'peshk_product';
-  $product->sku = $sku; // that should be unique; SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry
-  $product->title = $variation_title;
-  $product->uid = $user->uid;
-  krumo($row);
-  // die("die");
-  commerce_product_save($product);
-  // krumo($product);
-  // die("saved product die");
+  $color = $row[4];
+  $image = $row[5];
+  $image_alt = $row[6];
+  $image_title = $row[7];
+  $price = 0; // hard code $0
 
   // save product spec image
-//  $file = importer_image_attribute($spec_image, $spec_image_alt, $spec_image_title);
+  $file = importer_image_attribute($image, $image_alt, $image_title);
 
-  // set node values
-//  $ewrapper->field_voltage->set($voltage);
-//  $ewrapper->field_frequency->set($frequency);
-//  $ewrapper->field_air_volume_super_cmh->set($air_volume_super_cmh);
-//  // image
-//  $ewrapper->field_spec_image->set((array)importer_get_file_by_filename($spec_image));
-//  $ewrapper->field_spec_image_remark->set($spec_image_remark);
-//  $ewrapper->save();
+  // create commerce_product_variation
+  $psehk_product = commerce_product_new('peshk_product');
+  $psehk_product->field_product_variation_name["und"][0]["value"] = $variation_title;
+  $psehk_product->commerce_price["und"][0]["amount"] = $price * 100; // @todo: price should * 100
+  $psehk_product->commerce_price["und"][0]["currency_code"] = "USD"; // @todo: hard code USD
+
+  $psehk_product->field_product_image_gallery["und"] = [(array)importer_get_file_by_filename($image)];
+  $psehk_product->status["und"] = $status;
+  $psehk_product->field_color["und"] = $color;
+//  $psehk_product->field_product_color["und"][0]["rgb"] = $product_color; // color picker
+  $psehk_product->type = 'peshk_product';
+  $psehk_product->sku = $sku; // that should be unique; SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry
+  $psehk_product->title = $sku; // use sku for title text
+  $psehk_product->uid = $user->uid;
+  commerce_product_save($psehk_product);
 
   // update product
- $product = importer_get_prodcut_by_title($product_title);
- $node_wrapper = entity_metadata_wrapper('node', $product);
-//  $node_wrapper->field_product_specification->set([$product->product_id]);
-//  $node_wrapper->field_product_variation["und"][0]["entity_id"] = $product->product_id;
- $node_wrapper->field_product_variation->set([$product->product_id]);
- $node_wrapper->save();
-
+  $product = importer_get_prodcut_by_title($product_title);
+  $node_wrapper = entity_metadata_wrapper('node', $product);
+  $node_wrapper->field_product_variation = [$psehk_product->product_id];
+  $node_wrapper->save();
 }
 
 // helper function: get_product_by_title
@@ -754,7 +733,7 @@ function importer_get_file_by_filename($filename)
 }
 
 // helper function: insert new image and its attributes
-function importer_image_attribute($file_name, $alt=null, $title=null)
+function importer_image_attribute($file_name, $alt = null, $title = null)
 {
   // get file content
   $url = getcwd() . "/sites/default/files/psehk_importer/to_be_upload/" . $file_name;
@@ -764,11 +743,13 @@ function importer_image_attribute($file_name, $alt=null, $title=null)
   $file_storage_uri = 'public://psehk_importer/product_thumbnail/' . $file_name;
   $file = file_save_data($file_content, $file_storage_uri);
 
-  $file->status = 1;
-  $file->field_image['und'][0] = (array)$file;
-  node_save($file);
+//  $file->status = 1;
+//  $file->field_image['und'][0] = (array)$file;
+//  krumo($file);
+//  node_save($file);
+//  krumo($file);
 
-  if($alt && $title) {
+  if ($alt && $title) {
 
     // delete cache
     $result = db_delete('cache_field')
